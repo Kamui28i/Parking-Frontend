@@ -1,26 +1,50 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --accent: #000000;
+  --accent-hover: #333333;
+  --accent-light: #F5F5F7;
+  --bg-white: #FFFFFF;
+  --border: #E5E5EA;
+  --border-light: #F5F5F7;
+  --card-bg: #FFFFFF;
+  --destructive: #FF3B30;
+  --destructive-bg: #FFF0EF;
+  --input-bg: #FFFFFF;
+  --input-border: #D2D2D7;
+  --sidebar-bg: #FBFBFD;
+  --sidebar-hover: #F5F5F7;
+  --sidebar-active: #F5F5F7;
+  --sidebar-text: #86868B;
+  --sidebar-text-active: #1D1D1F;
+  --text-primary: #1D1D1F;
+  --text-secondary: #86868B;
+  --text-muted: #AEAEB2;
+  --text-white: #FFFFFF;
+  --status-free: #34C759;
+  --status-free-bg: #F0FAF3;
+  --status-reserved: #FF9F0A;
+  --status-reserved-bg: #FFF8EE;
+  --status-occupied: #FF3B30;
+  --status-occupied-bg: #FFF0EF;
+  --status-confirmed: #34C759;
+  --status-confirmed-bg: #F0FAF3;
+  --status-pending: #FF9F0A;
+  --status-pending-bg: #FFF8EE;
+  --status-cancelled: #AEAEB2;
+  --status-cancelled-bg: #F5F5F7;
+  --status-paid: #34C759;
+  --status-paid-bg: #F0FAF3;
+  --status-failed: #FF3B30;
+  --status-failed-bg: #FFF0EF;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text-primary);
+  background: #F5F5F7;
 }
