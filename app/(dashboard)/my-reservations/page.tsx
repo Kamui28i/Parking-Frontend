@@ -9,9 +9,9 @@ import type { Reservation } from "@/lib/types";
 type Tab = "ALL" | "ACTIVE" | "PAST";
 
 const MOCK: Reservation[] = [
-  { id: "1", spaceId: "A-01", citizenId: "u1", startTime: "2025-03-24T10:00:00", endTime: "2025-03-24T11:00:00", durationMinutes: 60, estimatedFee: "2.40", withCharging: false, status: "CONFIRMED" },
-  { id: "2", spaceId: "B-02", citizenId: "u1", startTime: "2025-03-25T14:30:00", endTime: "2025-03-25T15:30:00", durationMinutes: 60, estimatedFee: "3.60", withCharging: true, status: "PENDING" },
-  { id: "3", spaceId: "A-03", citizenId: "u1", startTime: "2025-03-23T09:00:00", endTime: "2025-03-23T11:00:00", durationMinutes: 120, estimatedFee: "2.80", withCharging: false, status: "CANCELLED" },
+  { id: "1", spaceId: "LotA1", citizenId: "u1", startTime: "2025-03-24T10:00:00", endTime: "2025-03-24T11:00:00", durationMinutes: 60, estimatedFee: "2.40", withCharging: false, status: "CONFIRMED" },
+  { id: "2", spaceId: "LotB3", citizenId: "u1", startTime: "2025-03-25T14:30:00", endTime: "2025-03-25T15:30:00", durationMinutes: 60, estimatedFee: "3.60", withCharging: true, status: "PENDING" },
+  { id: "3", spaceId: "LotA2", citizenId: "u1", startTime: "2025-03-23T09:00:00", endTime: "2025-03-23T11:00:00", durationMinutes: 120, estimatedFee: "2.80", withCharging: false, status: "CANCELLED" },
 ];
 
 const tabs: Tab[] = ["ALL", "ACTIVE", "PAST"];

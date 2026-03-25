@@ -15,6 +15,7 @@ export interface User {
 export interface Space {
   id: string;
   zoneId: string;
+  name: string;
   type: SpaceType;
   state: SpaceState;
 }
@@ -25,6 +26,9 @@ export interface Zone {
   address: string;
   totalCapacity: number;
   availableCount: number;
+  latitude?: number | null;
+  longitude?: number | null;
+  boundary?: string | null;
   spaces?: Space[];
 }
 

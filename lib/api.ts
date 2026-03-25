@@ -40,7 +40,7 @@ export const zonesApi = {
   update: (id: string, data: { name: string; address: string; totalCapacity: number }) =>
     request<import("./types").Zone>(`/zones/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   delete: (id: string) => request<void>(`/zones/${id}`, { method: "DELETE" }),
-  addSpace: (zoneId: string, data: { type: import("./types").SpaceType }) =>
+  addSpace: (zoneId: string, data: { name: string; type: import("./types").SpaceType }) =>
     request<import("./types").Space>(`/zones/${zoneId}/spaces`, {
       method: "POST",
       body: JSON.stringify(data),
@@ -54,11 +54,29 @@ export const zonesApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  updateMapData: (
+    zoneId: string,
+    data: { latitude: number | null; longitude: number | null; boundary: string | null }
+  ) =>
+    request<import("./types").Zone>(`/zones/${zoneId}/map`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  availableSpaces: (zoneId: string, start: string, end: string) =>
+    request<import("./types").Space[]>(
+      `/zones/${zoneId}/spaces/available?startTime=${encodeURIComponent(start)}&endTime=${encodeURIComponent(end)}`
+    ),
+  allAvailableSpaces: (start: string, end: string) =>
+    request<import("./types").Space[]>(
+      `/zones/spaces/available?startTime=${encodeURIComponent(start)}&endTime=${encodeURIComponent(end)}`
+    ),
 };
 
 // Reservations
 export const reservationsApi = {
   list: () => request<import("./types").Reservation[]>("/reservations/my"),
+  forSpace: (spaceId: string) =>
+    request<import("./types").Reservation[]>(`/reservations/space/${spaceId}`),
   get: (id: string) => request<import("./types").Reservation>(`/reservations/${id}`),
   create: (data: {
     spaceId: string;
