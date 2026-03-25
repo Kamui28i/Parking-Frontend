@@ -1,9 +1,10 @@
 export type Role = "CITIZEN" | "ADMIN";
 
-export type SpaceStatus = "FREE" | "RESERVED" | "OCCUPIED";
-export type ReservationStatus = "ACTIVE" | "CONFIRMED" | "PENDING" | "CANCELLED";
-export type InvoiceStatus = "PAID" | "PENDING" | "FAILED";
+export type SpaceState = "FREE" | "RESERVED" | "OCCUPIED";
 export type SpaceType = "REGULAR" | "EV";
+export type ReservationStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
+export type InvoiceStatus = "PAID" | "PENDING" | "FAILED";
+export type ChargingStatus = "PENDING" | "ACTIVE" | "COMPLETED";
 
 export interface User {
   id: string;
@@ -13,32 +14,30 @@ export interface User {
 
 export interface Space {
   id: string;
-  name: string;
-  type: SpaceType;
-  status: SpaceStatus;
   zoneId: string;
+  type: SpaceType;
+  state: SpaceState;
 }
 
 export interface Zone {
   id: string;
   name: string;
   address: string;
-  capacity: number;
-  available: number;
-  occupancy: number;
-  spaces: Space[];
+  totalCapacity: number;
+  availableCount: number;
+  spaces?: Space[];
 }
 
 export interface Reservation {
   id: string;
   spaceId: string;
-  spaceName: string;
-  zoneName: string;
-  start: string;
-  end: string;
-  fee: string;
+  citizenId: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  estimatedFee: string;
+  withCharging: boolean;
   status: ReservationStatus;
-  evCharging: boolean;
 }
 
 export interface Invoice {
@@ -51,10 +50,9 @@ export interface Invoice {
 
 export interface PricingRule {
   id: string;
-  zone: string;
+  zoneId: string;
   spaceType: SpaceType;
-  basePrice: string;
+  ratePerHour: string;
   validFrom: string;
   validTo: string | null;
-  active: boolean;
 }

@@ -46,7 +46,7 @@ export default function ReservationPage(props: {
     setError("");
     setLoading(true);
     try {
-      await reservationsApi.create({ spaceId, start, end, evCharging });
+      await reservationsApi.create({ spaceId, startTime: start, endTime: end, withCharging: evCharging });
       router.push("/my-reservations");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Reservation failed");

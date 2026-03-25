@@ -9,13 +9,16 @@ import type { Reservation } from "@/lib/types";
 type Tab = "ALL" | "ACTIVE" | "PAST";
 
 const MOCK: Reservation[] = [
-  { id: "1", spaceId: "A-01", spaceName: "A-01", zoneName: "Zone A — Central", start: "Mar 24, 10:00", end: "Mar 24, 11:00", fee: "€2.40", status: "CONFIRMED", evCharging: false },
-  { id: "2", spaceId: "B-02", spaceName: "B-02", zoneName: "Zone B — Station", start: "Mar 25, 14:30", end: "Mar 25, 15:30", fee: "€3.60", status: "PENDING", evCharging: true },
-  { id: "3", spaceId: "A-03", spaceName: "A-03", zoneName: "Zone A — Central", start: "Mar 23, 09:00", end: "Mar 23, 11:00", fee: "€2.80", status: "CANCELLED", evCharging: false },
-  { id: "4", spaceId: "B-07", spaceName: "B-07", zoneName: "Zone B — Station", start: "Mar 20, 16:30", end: "Mar 20, 17:30", fee: "€3.60", status: "CONFIRMED", evCharging: false },
+  { id: "1", spaceId: "A-01", citizenId: "u1", startTime: "2025-03-24T10:00:00", endTime: "2025-03-24T11:00:00", durationMinutes: 60, estimatedFee: "2.40", withCharging: false, status: "CONFIRMED" },
+  { id: "2", spaceId: "B-02", citizenId: "u1", startTime: "2025-03-25T14:30:00", endTime: "2025-03-25T15:30:00", durationMinutes: 60, estimatedFee: "3.60", withCharging: true, status: "PENDING" },
+  { id: "3", spaceId: "A-03", citizenId: "u1", startTime: "2025-03-23T09:00:00", endTime: "2025-03-23T11:00:00", durationMinutes: 120, estimatedFee: "2.80", withCharging: false, status: "CANCELLED" },
 ];
 
 const tabs: Tab[] = ["ALL", "ACTIVE", "PAST"];
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
 
 export default function MyReservationsPage() {
   const [reservations, setReservations] = useState<Reservation[]>(MOCK);
@@ -78,7 +81,7 @@ export default function MyReservationsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#E5E5EA]">
-              {["Space ID", "Zone", "Start — End", "Fee", "Status", "Actions"].map((h) => (
+              {["Space ID", "Start — End", "Fee", "Status", "Actions"].map((h) => (
                 <th
                   key={h}
                   className="px-4 py-3 text-left text-xs font-medium text-[#86868B] uppercase tracking-wide"
@@ -91,16 +94,15 @@ export default function MyReservationsPage() {
           <tbody className="divide-y divide-[#F5F5F7]">
             {filtered.map((r) => (
               <tr key={r.id} className="hover:bg-[#FAFAFA] transition-colors">
-                <td className="px-4 py-3 font-medium text-[#1D1D1F]">{r.spaceName}</td>
-                <td className="px-4 py-3 text-[#86868B]">{r.zoneName}</td>
-                <td className="px-4 py-3 text-[#86868B]">{r.start} — {r.end}</td>
-                <td className="px-4 py-3 text-[#1D1D1F]">{r.fee}</td>
+                <td className="px-4 py-3 font-medium text-[#1D1D1F]">{r.spaceId}</td>
+                <td className="px-4 py-3 text-[#86868B]">{formatDateTime(r.startTime)} — {formatDateTime(r.endTime)}</td>
+                <td className="px-4 py-3 text-[#1D1D1F]">€{r.estimatedFee}</td>
                 <td className="px-4 py-3">
                   <Badge label={r.status} variant={statusToBadge(r.status)} />
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    {(r.status === "CONFIRMED" || r.status === "ACTIVE") && (
+                    {(r.status === "CONFIRMED" || r.status === "PENDING") && (
                       <>
                         <Button
                           variant="destructive"
@@ -110,7 +112,7 @@ export default function MyReservationsPage() {
                         >
                           {cancelling === r.id ? "..." : "Cancel"}
                         </Button>
-                        {r.evCharging && (
+                        {r.withCharging && (
                           <Button
                             variant="secondary"
                             className="h-8 px-3 text-xs"
@@ -127,7 +129,7 @@ export default function MyReservationsPage() {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-[#86868B] text-sm">
+                <td colSpan={5} className="px-4 py-8 text-center text-[#86868B] text-sm">
                   No reservations found.
                 </td>
               </tr>

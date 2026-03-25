@@ -1,9 +1,4 @@
-/**
- * API client stubs — replace BASE_URL and implement auth headers
- * when integrating with the backend.
- */
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -15,9 +10,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
   });
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(error.message ?? "Request failed");
+    const error = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(error.error ?? error.message ?? "Request failed");
   }
+  if (res.status === 204) return undefined as T;
   return res.json();
 }
 
@@ -38,18 +34,22 @@ export const authApi = {
 // Zones & Spaces
 export const zonesApi = {
   list: () => request<import("./types").Zone[]>("/zones"),
-  get: (id: string) => request<import("./types").Zone>(`/zones/${id}`),
-  create: (data: Partial<import("./types").Zone>) =>
+  spaces: (zoneId: string) => request<import("./types").Space[]>(`/zones/${zoneId}/spaces`),
+  create: (data: { name: string; address: string; totalCapacity: number }) =>
     request<import("./types").Zone>("/zones", { method: "POST", body: JSON.stringify(data) }),
-  update: (id: string, data: Partial<import("./types").Zone>) =>
+  update: (id: string, data: { name: string; address: string; totalCapacity: number }) =>
     request<import("./types").Zone>(`/zones/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   delete: (id: string) => request<void>(`/zones/${id}`, { method: "DELETE" }),
-  addSpace: (zoneId: string, data: Partial<import("./types").Space>) =>
+  addSpace: (zoneId: string, data: { type: import("./types").SpaceType }) =>
     request<import("./types").Space>(`/zones/${zoneId}/spaces`, {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  updateSpace: (zoneId: string, spaceId: string, data: Partial<import("./types").Space>) =>
+  updateSpace: (
+    zoneId: string,
+    spaceId: string,
+    data: { type: import("./types").SpaceType; state: import("./types").SpaceState }
+  ) =>
     request<import("./types").Space>(`/zones/${zoneId}/spaces/${spaceId}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -58,47 +58,45 @@ export const zonesApi = {
 
 // Reservations
 export const reservationsApi = {
-  list: (filter?: "ACTIVE" | "PAST") =>
-    request<import("./types").Reservation[]>(
-      `/reservations${filter ? `?status=${filter}` : ""}`
-    ),
+  list: () => request<import("./types").Reservation[]>("/reservations/my"),
   get: (id: string) => request<import("./types").Reservation>(`/reservations/${id}`),
   create: (data: {
     spaceId: string;
-    start: string;
-    end: string;
-    evCharging: boolean;
+    startTime: string;
+    endTime: string;
+    withCharging: boolean;
   }) =>
     request<import("./types").Reservation>("/reservations", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  cancel: (id: string) =>
-    request<import("./types").Reservation>(`/reservations/${id}/cancel`, { method: "POST" }),
-  startCharging: (id: string) =>
-    request<void>(`/reservations/${id}/charging/start`, { method: "POST" }),
+  cancel: (id: string) => request<void>(`/reservations/${id}`, { method: "DELETE" }),
+  startCharging: (reservationId: string) =>
+    request<void>("/charging/sessions/start", {
+      method: "POST",
+      body: JSON.stringify({ reservationId }),
+    }),
 };
 
 // Invoices
 export const invoicesApi = {
-  list: () => request<import("./types").Invoice[]>("/invoices"),
+  list: () => request<import("./types").Invoice[]>("/invoices/my"),
   get: (id: string) => request<import("./types").Invoice>(`/invoices/${id}`),
-  listAll: () => request<import("./types").Invoice[]>("/admin/invoices"),
+  listAll: () => request<import("./types").Invoice[]>("/invoices"),
 };
 
 // Pricing
 export const pricingApi = {
-  list: () => request<import("./types").PricingRule[]>("/admin/pricing"),
+  list: () => request<import("./types").PricingRule[]>("/pricing/rules"),
   create: (data: Partial<import("./types").PricingRule>) =>
-    request<import("./types").PricingRule>("/admin/pricing", {
+    request<import("./types").PricingRule>("/pricing/rules", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   update: (id: string, data: Partial<import("./types").PricingRule>) =>
-    request<import("./types").PricingRule>(`/admin/pricing/${id}`, {
+    request<import("./types").PricingRule>(`/pricing/rules/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
-  delete: (id: string) =>
-    request<void>(`/admin/pricing/${id}`, { method: "DELETE" }),
+  delete: (id: string) => request<void>(`/pricing/rules/${id}`, { method: "DELETE" }),
 };

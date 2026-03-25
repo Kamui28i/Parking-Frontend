@@ -12,30 +12,27 @@ const MOCK_ZONES: Zone[] = [
     id: "zone-a",
     name: "Zone A — Central",
     address: "123 Main Street",
-    capacity: 20,
-    available: 12,
-    occupancy: 40,
+    totalCapacity: 20,
+    availableCount: 12,
     spaces: [
-      { id: "A-01", name: "A-01", type: "REGULAR", status: "FREE", zoneId: "zone-a" },
-      { id: "A-10", name: "A-10", type: "EV", status: "RESERVED", zoneId: "zone-a" },
+      { id: "A-01", type: "REGULAR", state: "FREE", zoneId: "zone-a" },
+      { id: "A-10", type: "EV", state: "RESERVED", zoneId: "zone-a" },
     ],
   },
   {
     id: "zone-b",
     name: "Zone B — Station",
     address: "45 Station Ave",
-    capacity: 15,
-    available: 4,
-    occupancy: 73,
+    totalCapacity: 15,
+    availableCount: 4,
     spaces: [],
   },
   {
     id: "zone-c",
     name: "Zone C — Airport",
     address: "Airport Rd",
-    capacity: 30,
-    available: 0,
-    occupancy: 100,
+    totalCapacity: 30,
+    availableCount: 0,
     spaces: [],
   },
 ];
@@ -45,7 +42,15 @@ export default function AdminZonesPage() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set(["zone-a"]));
 
   useEffect(() => {
-    zonesApi.list().then(setZones).catch(() => {/* use mock */});
+    zonesApi.list().then(async (fetchedZones) => {
+      const withSpaces = await Promise.all(
+        fetchedZones.map(async (z) => ({
+          ...z,
+          spaces: await zonesApi.spaces(z.id).catch(() => []),
+        }))
+      );
+      setZones(withSpaces);
+    }).catch(() => {/* use mock */});
   }, []);
 
   const toggle = (id: string) => {
@@ -55,6 +60,11 @@ export default function AdminZonesPage() {
       return next;
     });
   };
+
+  const occupancyPct = (zone: Zone) =>
+    zone.totalCapacity > 0
+      ? Math.round(((zone.totalCapacity - zone.availableCount) / zone.totalCapacity) * 100)
+      : 0;
 
   const occupancyColor = (pct: number) =>
     pct >= 90 ? "bg-[#FF3B30]" : pct >= 60 ? "bg-[#FF9F0A]" : "bg-[#34C759]";
@@ -81,6 +91,7 @@ export default function AdminZonesPage() {
 
         {zones.map((zone) => {
           const isOpen = expanded.has(zone.id);
+          const pct = occupancyPct(zone);
           return (
             <div key={zone.id} className="border-b border-[#F5F5F7] last:border-0">
               {/* Zone row */}
@@ -97,16 +108,16 @@ export default function AdminZonesPage() {
                   <span className="text-sm font-medium text-[#1D1D1F]">{zone.name}</span>
                 </div>
                 <span className="text-sm text-[#86868B]">{zone.address}</span>
-                <span className="text-sm text-[#1D1D1F]">{zone.capacity}</span>
-                <span className="text-sm text-[#1D1D1F]">{zone.available}</span>
+                <span className="text-sm text-[#1D1D1F]">{zone.totalCapacity}</span>
+                <span className="text-sm text-[#1D1D1F]">{zone.availableCount}</span>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-2 rounded-full bg-[#F5F5F7] overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${occupancyColor(zone.occupancy)}`}
-                      style={{ width: `${zone.occupancy}%` }}
+                      className={`h-full rounded-full ${occupancyColor(pct)}`}
+                      style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="text-xs text-[#86868B] w-8 text-right">{zone.occupancy}%</span>
+                  <span className="text-xs text-[#86868B] w-8 text-right">{pct}%</span>
                 </div>
                 <button
                   className="p-1 rounded-lg hover:bg-[#F5F5F7] text-[#86868B] hover:text-[#1D1D1F] transition-colors"
@@ -128,14 +139,14 @@ export default function AdminZonesPage() {
                     ))}
                   </div>
 
-                  {zone.spaces.map((space) => (
+                  {(zone.spaces ?? []).map((space) => (
                     <div
                       key={space.id}
                       className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 px-4 py-2.5 bg-white rounded-xl border border-[#E5E5EA] mb-2 items-center"
                     >
-                      <span className="text-sm font-medium text-[#1D1D1F]">{space.name}</span>
+                      <span className="text-sm font-medium text-[#1D1D1F]">{space.id}</span>
                       <Badge label={space.type} variant="blue" />
-                      <Badge label={space.status} variant={statusToBadge(space.status)} />
+                      <Badge label={space.state} variant={statusToBadge(space.state)} />
                       <button className="p-1 rounded-lg hover:bg-[#F5F5F7] text-[#86868B] hover:text-[#1D1D1F] transition-colors">
                         <Edit2 size={14} />
                       </button>

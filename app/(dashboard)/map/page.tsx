@@ -7,38 +7,34 @@ import Button from "@/components/ui/Button";
 import { zonesApi } from "@/lib/api";
 import type { Zone } from "@/lib/types";
 
-// Mock data used until backend is connected
 const MOCK_ZONES: Zone[] = [
   {
     id: "zone-a",
     name: "Zone A — Central",
     address: "123 Main Street",
-    capacity: 10,
-    available: 7,
-    occupancy: 30,
+    totalCapacity: 10,
+    availableCount: 7,
     spaces: [
-      { id: "A-01", name: "A-01", type: "REGULAR", status: "FREE", zoneId: "zone-a" },
-      { id: "A-02", name: "A-02", type: "EV", status: "RESERVED", zoneId: "zone-a" },
+      { id: "A-01", type: "REGULAR", state: "FREE", zoneId: "zone-a" },
+      { id: "A-02", type: "EV", state: "RESERVED", zoneId: "zone-a" },
     ],
   },
   {
     id: "zone-b",
     name: "Zone B — Station",
     address: "45 Station Ave",
-    capacity: 15,
-    available: 4,
-    occupancy: 73,
+    totalCapacity: 15,
+    availableCount: 4,
     spaces: [
-      { id: "B-01", name: "B-01", type: "REGULAR", status: "OCCUPIED", zoneId: "zone-b" },
+      { id: "B-01", type: "REGULAR", state: "OCCUPIED", zoneId: "zone-b" },
     ],
   },
   {
     id: "zone-c",
     name: "Zone C — Airport",
     address: "Airport Rd",
-    capacity: 30,
-    available: 0,
-    occupancy: 100,
+    totalCapacity: 30,
+    availableCount: 0,
     spaces: [],
   },
 ];
@@ -49,7 +45,15 @@ export default function MapPage() {
   const [selectedZone, setSelectedZone] = useState<string | null>("zone-a");
 
   useEffect(() => {
-    zonesApi.list().then(setZones).catch(() => {/* use mock */});
+    zonesApi.list().then(async (fetchedZones) => {
+      const withSpaces = await Promise.all(
+        fetchedZones.map(async (z) => ({
+          ...z,
+          spaces: await zonesApi.spaces(z.id).catch(() => []),
+        }))
+      );
+      setZones(withSpaces);
+    }).catch(() => {/* use mock */});
   }, []);
 
   const zoneColors: Record<number, { bg: string; border: string; label: string }> = {
@@ -77,7 +81,7 @@ export default function MapPage() {
         <div className="flex flex-col divide-y divide-[#E5E5EA]">
           {zones.map((zone) => {
             const isSelected = selectedZone === zone.id;
-            const statusVariant = zone.available > 0 ? "green" : "red";
+            const statusVariant = zone.availableCount > 0 ? "green" : "red";
             return (
               <div
                 key={zone.id}
@@ -87,34 +91,34 @@ export default function MapPage() {
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div>
                     <p className="text-sm font-medium text-[#1D1D1F]">{zone.name}</p>
-                    <p className="text-xs text-[#86868B]">{zone.available} available · {zone.address}</p>
+                    <p className="text-xs text-[#86868B]">{zone.availableCount} available · {zone.address}</p>
                   </div>
                   <Badge
-                    label={zone.available > 0 ? `${zone.available} FREE` : "FULL"}
+                    label={zone.availableCount > 0 ? `${zone.availableCount} FREE` : "FULL"}
                     variant={statusVariant}
                   />
                 </div>
 
-                {isSelected && zone.spaces.length > 0 && (
+                {isSelected && (zone.spaces ?? []).length > 0 && (
                   <div className="flex flex-col gap-2 mt-3">
-                    {zone.spaces.map((space) => (
+                    {(zone.spaces ?? []).map((space) => (
                       <div
                         key={space.id}
                         className="flex items-center justify-between p-2 rounded-xl bg-white border border-[#E5E5EA]"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-[#1D1D1F]">{space.name}</span>
+                          <span className="text-sm font-medium text-[#1D1D1F]">{space.id}</span>
                           <Badge label={space.type} variant="blue" />
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge label={space.status} variant={statusToBadge(space.status)} />
-                          {space.status === "FREE" && (
+                          <Badge label={space.state} variant={statusToBadge(space.state)} />
+                          {space.state === "FREE" && (
                             <Button
                               variant="primary"
                               className="h-8 px-4 text-xs"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                router.push(`/reservations/${space.id}?zoneId=${zone.id}&spaceName=${space.name}&zoneName=${encodeURIComponent(zone.name)}`);
+                                router.push(`/reservations/${space.id}?zoneId=${zone.id}&spaceName=${space.id}&zoneName=${encodeURIComponent(zone.name)}`);
                               }}
                             >
                               Reserve
@@ -152,13 +156,13 @@ export default function MapPage() {
               >
                 <span className="text-xs font-semibold text-[#1D1D1F]">{colors.label}</span>
                 <div className="flex gap-1.5">
-                  {zone.spaces.slice(0, 4).map((s) => (
+                  {(zone.spaces ?? []).slice(0, 4).map((s) => (
                     <div
                       key={s.id}
                       className={`w-3 h-3 rounded-full ${
-                        s.status === "FREE"
+                        s.state === "FREE"
                           ? "bg-[#34C759]"
-                          : s.status === "RESERVED"
+                          : s.state === "RESERVED"
                           ? "bg-[#FF9F0A]"
                           : "bg-[#FF3B30]"
                       }`}

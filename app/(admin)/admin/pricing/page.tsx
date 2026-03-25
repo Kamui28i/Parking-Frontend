@@ -8,10 +8,10 @@ import { pricingApi } from "@/lib/api";
 import type { PricingRule } from "@/lib/types";
 
 const MOCK: PricingRule[] = [
-  { id: "1", zone: "Zone A — Central", spaceType: "REGULAR", basePrice: "€2.40", validFrom: "Jun 1, 2023", validTo: null, active: true },
-  { id: "2", zone: "Zone A — Central", spaceType: "EV", basePrice: "€3.50", validFrom: "Jun 1, 2024", validTo: "Oct 27, 2024", active: false },
-  { id: "3", zone: "Zone B — Station", spaceType: "REGULAR", basePrice: "€1.80", validFrom: "Mar 1, 2024", validTo: null, active: true },
-  { id: "4", zone: "Zone C — Airport", spaceType: "REGULAR", basePrice: "€4.00", validFrom: "Jun 1, 2024", validTo: "Apr 30, 2024", active: false },
+  { id: "1", zoneId: "zone-a", spaceType: "REGULAR", ratePerHour: "2.40", validFrom: "2023-06-01T00:00:00", validTo: null },
+  { id: "2", zoneId: "zone-a", spaceType: "EV", ratePerHour: "3.50", validFrom: "2024-06-01T00:00:00", validTo: "2024-10-27T23:59:59" },
+  { id: "3", zoneId: "zone-b", spaceType: "REGULAR", ratePerHour: "1.80", validFrom: "2024-03-01T00:00:00", validTo: null },
+  { id: "4", zoneId: "zone-c", spaceType: "REGULAR", ratePerHour: "4.00", validFrom: "2024-06-01T00:00:00", validTo: "2024-04-30T23:59:59" },
 ];
 
 export default function AdminPricingPage() {
@@ -42,7 +42,7 @@ export default function AdminPricingPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#E5E5EA]">
-              {["Zone", "Space Type", "Base Price", "Valid From", "Valid To", "Actions"].map((h) => (
+              {["Zone ID", "Space Type", "Rate/Hour", "Valid From", "Valid To", "Actions"].map((h) => (
                 <th
                   key={h}
                   className="px-4 py-3 text-left text-xs font-medium text-[#86868B] uppercase tracking-wide"
@@ -55,11 +55,11 @@ export default function AdminPricingPage() {
           <tbody className="divide-y divide-[#F5F5F7]">
             {rules.map((rule) => (
               <tr key={rule.id} className="hover:bg-[#FAFAFA] transition-colors">
-                <td className="px-4 py-3 text-[#1D1D1F]">{rule.zone}</td>
+                <td className="px-4 py-3 text-[#1D1D1F]">{rule.zoneId}</td>
                 <td className="px-4 py-3">
                   <Badge label={rule.spaceType} variant="blue" />
                 </td>
-                <td className="px-4 py-3 font-medium text-[#1D1D1F]">{rule.basePrice}</td>
+                <td className="px-4 py-3 font-medium text-[#1D1D1F]">€{rule.ratePerHour}/hr</td>
                 <td className="px-4 py-3 text-[#86868B]">{rule.validFrom}</td>
                 <td className="px-4 py-3 text-[#86868B]">{rule.validTo ?? "No expiry"}</td>
                 <td className="px-4 py-3">
