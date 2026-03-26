@@ -35,9 +35,9 @@ export const authApi = {
 export const zonesApi = {
   list: () => request<import("./types").Zone[]>("/zones"),
   spaces: (zoneId: string) => request<import("./types").Space[]>(`/zones/${zoneId}/spaces`),
-  create: (data: { name: string; address: string; totalCapacity: number }) =>
+  create: (data: { name: string; address: string }) =>
     request<import("./types").Zone>("/zones", { method: "POST", body: JSON.stringify(data) }),
-  update: (id: string, data: { name: string; address: string; totalCapacity: number }) =>
+  update: (id: string, data: { name: string; address: string }) =>
     request<import("./types").Zone>(`/zones/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   delete: (id: string) => request<void>(`/zones/${id}`, { method: "DELETE" }),
   addSpace: (zoneId: string, data: { name: string; type: import("./types").SpaceType }) =>

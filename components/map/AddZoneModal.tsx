@@ -23,7 +23,6 @@ export interface NewSpaceEntry {
 export interface NewZoneData {
   name: string;
   address: string;
-  totalCapacity: number;
   spaces: NewSpaceEntry[];
   latitude: number | null;
   longitude: number | null;
@@ -39,7 +38,6 @@ export default function AddZoneModal({ onSave, onClose }: Props) {
   // Form
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
-  const [totalCapacity, setTotalCapacity] = useState("");
 
   // Spaces
   const [spaces, setSpaces] = useState<NewSpaceEntry[]>([]);
@@ -129,13 +127,8 @@ export default function AddZoneModal({ onSave, onClose }: Props) {
     setSpaces((prev) => prev.filter((_, idx) => idx !== i));
 
   const handleSave = async () => {
-    if (!name.trim() || !address.trim() || !totalCapacity) {
-      setError("Name, address and capacity are required.");
-      return;
-    }
-    const capacity = parseInt(totalCapacity);
-    if (isNaN(capacity) || capacity < 1) {
-      setError("Capacity must be a positive number.");
+    if (!name.trim() || !address.trim()) {
+      setError("Name and address are required.");
       return;
     }
     setSaving(true);
@@ -144,7 +137,6 @@ export default function AddZoneModal({ onSave, onClose }: Props) {
       await onSave({
         name: name.trim(),
         address: address.trim(),
-        totalCapacity: capacity,
         spaces,
         latitude: pinLatLng ? pinLatLng[0] : null,
         longitude: pinLatLng ? pinLatLng[1] : null,
@@ -195,17 +187,6 @@ export default function AddZoneModal({ onSave, onClose }: Props) {
                   placeholder="e.g. Märkische Str. 10, 44141 Dortmund"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="h-9 px-3 rounded-xl border border-[#D2D2D7] text-sm focus:outline-none focus:border-[#1D1D1F] bg-[#FAFAFA]"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-[#1D1D1F]">Total Capacity</label>
-                <input
-                  type="number"
-                  min={1}
-                  placeholder="e.g. 12"
-                  value={totalCapacity}
-                  onChange={(e) => setTotalCapacity(e.target.value)}
                   className="h-9 px-3 rounded-xl border border-[#D2D2D7] text-sm focus:outline-none focus:border-[#1D1D1F] bg-[#FAFAFA]"
                 />
               </div>

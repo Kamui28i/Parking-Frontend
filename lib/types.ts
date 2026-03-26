@@ -2,6 +2,7 @@ export type Role = "CITIZEN" | "ADMIN";
 
 export type SpaceState = "FREE" | "RESERVED" | "OCCUPIED";
 export type SpaceType = "REGULAR" | "EV";
+export type PricingSpaceType = "REGULAR" | "EV" | "ALL";
 export type ReservationStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
 export type InvoiceStatus = "PAID" | "PENDING" | "FAILED";
 export type ChargingStatus = "PENDING" | "ACTIVE" | "COMPLETED";
@@ -24,7 +25,7 @@ export interface Zone {
   id: string;
   name: string;
   address: string;
-  totalCapacity: number;
+  totalCapacity: number; // derived: number of spaces (from backend)
   availableCount: number;
   latitude?: number | null;
   longitude?: number | null;
@@ -70,7 +71,7 @@ export interface ChargingSession {
 export interface PricingRule {
   id: string;
   zoneId: string;
-  spaceType: SpaceType;
+  spaceType: PricingSpaceType;
   ratePerHour: string;
   validFrom: string;
   validTo: string | null;

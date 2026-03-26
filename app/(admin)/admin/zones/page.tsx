@@ -113,7 +113,6 @@ export default function AdminZonesPage() {
     const created = await zonesApi.create({
       name: data.name,
       address: data.address,
-      totalCapacity: data.totalCapacity,
     });
     await Promise.all([
       data.spaces.length > 0
@@ -139,10 +138,12 @@ export default function AdminZonesPage() {
     });
   };
 
-  const occupancyPct = (zone: Zone) =>
-    zone.totalCapacity > 0
-      ? Math.round(((zone.totalCapacity - zone.availableCount) / zone.totalCapacity) * 100)
+  const occupancyPct = (zone: Zone) => {
+    const total = zone.totalCapacity > 0 ? zone.totalCapacity : (zone.spaces ?? []).length;
+    return total > 0
+      ? Math.round(((total - zone.availableCount) / total) * 100)
       : 0;
+  };
 
   const occupancyColor = (pct: number) =>
     pct >= 90 ? "bg-[#FF3B30]" : pct >= 60 ? "bg-[#FF9F0A]" : "bg-[#34C759]";
@@ -172,8 +173,8 @@ export default function AdminZonesPage() {
 
       <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[2fr_2fr_1fr_1fr_2fr_auto] gap-4 px-4 py-3 border-b border-[#E5E5EA]">
-          {["Zone Name", "Address", "Capacity", "Available", "Occupancy", ""].map((h) => (
+        <div className="grid grid-cols-[2fr_2fr_1fr_2fr_auto] gap-4 px-4 py-3 border-b border-[#E5E5EA]">
+          {["Zone Name", "Address", "Available", "Occupancy", ""].map((h) => (
             <div
               key={h}
               className="text-xs font-medium text-[#86868B] uppercase tracking-wide"
@@ -191,7 +192,7 @@ export default function AdminZonesPage() {
             <div key={zone.id} className="border-b border-[#F5F5F7] last:border-0">
               {/* Zone row */}
               <div
-                className="grid grid-cols-[2fr_2fr_1fr_1fr_2fr_auto] gap-4 px-4 py-3 items-center cursor-pointer hover:bg-[#FAFAFA] transition-colors"
+                className="grid grid-cols-[2fr_2fr_1fr_2fr_auto] gap-4 px-4 py-3 items-center cursor-pointer hover:bg-[#FAFAFA] transition-colors"
                 onClick={() => toggle(zone.id)}
               >
                 <div className="flex items-center gap-2">
@@ -208,7 +209,6 @@ export default function AdminZonesPage() {
                   )}
                 </div>
                 <span className="text-sm text-[#86868B]">{zone.address}</span>
-                <span className="text-sm text-[#1D1D1F]">{zone.totalCapacity}</span>
                 <span className="text-sm text-[#1D1D1F]">{zone.availableCount}</span>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-2 rounded-full bg-[#F5F5F7] overflow-hidden">
