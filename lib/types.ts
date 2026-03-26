@@ -35,6 +35,8 @@ export interface Zone {
 export interface Reservation {
   id: string;
   spaceId: string;
+  spaceName?: string;
+  zoneName?: string;
   citizenId: string;
   startTime: string;
   endTime: string;
@@ -47,6 +49,8 @@ export interface Reservation {
 export interface Invoice {
   id: string;
   reservationId: string;
+  spaceName?: string;
+  zoneName?: string;
   amount: string;
   status: InvoiceStatus;
   createdAt: string;

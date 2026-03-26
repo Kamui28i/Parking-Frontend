@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Map, BookOpen, FileText, Zap } from "lucide-react";
 
 const navItems = [
@@ -23,10 +24,10 @@ export default function Sidebar() {
     router.push("/login");
   };
 
-  const email =
-    typeof window !== "undefined"
-      ? (JSON.parse(localStorage.getItem("user") ?? "{}").email ?? "user@email.com")
-      : "user@email.com";
+  const [email, setEmail] = useState("");
+  useEffect(() => {
+    setEmail(JSON.parse(localStorage.getItem("user") ?? "{}").email ?? "");
+  }, []);
 
   return (
     <aside
