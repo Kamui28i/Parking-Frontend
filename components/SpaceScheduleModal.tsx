@@ -32,8 +32,8 @@ function nowPlusHours(h: number) {
   return toLocal(d);
 }
 
-const SLOT_START = 6;  // 6 AM
-const SLOT_END = 22;   // 10 PM
+const SLOT_START = 0;  // midnight
+const SLOT_END = 24;   // midnight
 
 type SlotStatus = "past" | "free" | "booked" | "selected";
 
