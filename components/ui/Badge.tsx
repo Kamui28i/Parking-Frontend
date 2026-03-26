@@ -21,6 +21,7 @@ export function statusToBadge(
     FAILED: "red",
     CANCELLED: "gray",
     ACTIVE: "blue",
+    COMPLETED: "green",
   };
   return map[status.toUpperCase()] ?? "gray";
 }

@@ -56,6 +56,17 @@ export interface Invoice {
   createdAt: string;
 }
 
+export interface ChargingSession {
+  id: string;
+  reservationId: string;
+  spaceId: string;
+  spaceName?: string;
+  zoneName?: string;
+  status: ChargingStatus;
+  startedAt: string;
+  energyKwh: number | null;
+}
+
 export interface PricingRule {
   id: string;
   zoneId: string;

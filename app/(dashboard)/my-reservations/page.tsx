@@ -1,11 +1,11 @@
 "use client";
 
 import { use, Suspense, useState } from "react";
+import { Zap } from "lucide-react";
 import Badge, { statusToBadge } from "@/components/ui/Badge";
-import Button from "@/components/ui/Button";
 import TableSkeleton from "@/components/ui/TableSkeleton";
-import { reservationsApi } from "@/lib/api";
-import type { Reservation } from "@/lib/types";
+import { reservationsApi, chargingApi } from "@/lib/api";
+import type { Reservation, ChargingSession } from "@/lib/types";
 
 type Tab = "ALL" | "ACTIVE" | "PAST";
 
@@ -17,11 +17,24 @@ function formatDateTime(iso: string) {
 
 const HEADERS = ["Parking Space", "Start — End", "Fee", "Status", "Actions"];
 
-function ReservationsList({ promise }: { promise: Promise<Reservation[]> }) {
-  const initial = use(promise);
+type PageData = { reservations: Reservation[]; sessions: ChargingSession[] };
+
+function ReservationsList({ promise }: { promise: Promise<PageData> }) {
+  const { reservations: initial, sessions: initialSessions } = use(promise);
   const [reservations, setReservations] = useState(initial);
   const [tab, setTab] = useState<Tab>("ALL");
   const [cancelling, setCancelling] = useState<string | null>(null);
+  // reservationId -> active ChargingSession (seeded from API)
+  const [activeSessions, setActiveSessions] = useState<Record<string, ChargingSession>>(() =>
+    Object.fromEntries(
+      initialSessions.filter(s => s.status === "ACTIVE").map(s => [s.reservationId, s])
+    )
+  );
+  const [completedSessions, setCompletedSessions] = useState<Set<string>>(() =>
+    new Set(initialSessions.filter(s => s.status === "COMPLETED").map(s => s.reservationId))
+  );
+  const [startingCharging, setStartingCharging] = useState<string | null>(null);
+  const [stoppingCharging, setStoppingCharging] = useState<string | null>(null);
 
   const filtered = reservations.filter((r) => {
     if (tab === "ACTIVE") return r.status === "CONFIRMED" || r.status === "PENDING";
@@ -39,8 +52,31 @@ function ReservationsList({ promise }: { promise: Promise<Reservation[]> }) {
     }
   };
 
-  const handleStartCharging = async (id: string) => {
-    try { await reservationsApi.startCharging(id); } catch {/* ignore */}
+  const handleStartCharging = async (reservationId: string) => {
+    setStartingCharging(reservationId);
+    try {
+      const session = await reservationsApi.startCharging(reservationId);
+      setActiveSessions((prev) => ({ ...prev, [reservationId]: session }));
+    } catch {/* ignore */} finally {
+      setStartingCharging(null);
+    }
+  };
+
+  const handleStopCharging = async (reservationId: string) => {
+    const session = activeSessions[reservationId];
+    if (!session) return;
+    setStoppingCharging(reservationId);
+    try {
+      await chargingApi.stop(session.id);
+      setActiveSessions((prev) => {
+        const next = { ...prev };
+        delete next[reservationId];
+        return next;
+      });
+      setCompletedSessions((prev) => new Set([...prev, reservationId]));
+    } catch {/* ignore */} finally {
+      setStoppingCharging(null);
+    }
   };
 
   return (
@@ -86,13 +122,51 @@ function ReservationsList({ promise }: { promise: Promise<Reservation[]> }) {
                   <div className="flex items-center gap-2">
                     {(r.status === "CONFIRMED" || r.status === "PENDING") && (
                       <>
-                        <Button variant="destructive" className="h-8 px-3 text-xs" disabled={cancelling === r.id} onClick={() => handleCancel(r.id)}>
-                          {cancelling === r.id ? "..." : "Cancel"}
-                        </Button>
+                        <button
+                          disabled={cancelling === r.id}
+                          onClick={() => handleCancel(r.id)}
+                          className="text-xs text-[#FF3B30] hover:text-[#d63028] disabled:opacity-40 transition-colors font-medium"
+                        >
+                          {cancelling === r.id ? "…" : "Cancel"}
+                        </button>
+
                         {r.withCharging && (
-                          <Button variant="secondary" className="h-8 px-3 text-xs" onClick={() => handleStartCharging(r.id)}>
-                            Start charging
-                          </Button>
+                          activeSessions[r.id] ? (
+                            <>
+                              <span className="text-[#D2D2D7]">·</span>
+                              <span className="flex items-center gap-1 text-xs font-medium text-[#34C759]">
+                                <Zap size={11} className="fill-[#34C759]" />
+                                Charging
+                              </span>
+                              <button
+                                disabled={stoppingCharging === r.id}
+                                onClick={() => handleStopCharging(r.id)}
+                                className="text-xs text-[#86868B] hover:text-[#1D1D1F] disabled:opacity-40 transition-colors font-medium underline underline-offset-2"
+                              >
+                                {stoppingCharging === r.id ? "…" : "Stop"}
+                              </button>
+                            </>
+                          ) : completedSessions.has(r.id) ? (
+                            <>
+                              <span className="text-[#D2D2D7]">·</span>
+                              <span className="flex items-center gap-1 text-xs text-[#86868B]">
+                                <Zap size={11} />
+                                Charged
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-[#D2D2D7]">·</span>
+                              <button
+                                disabled={startingCharging === r.id}
+                                onClick={() => handleStartCharging(r.id)}
+                                className="flex items-center gap-1 text-xs text-[#3B82F6] hover:text-[#2563eb] disabled:opacity-40 transition-colors font-medium"
+                              >
+                                <Zap size={11} />
+                                {startingCharging === r.id ? "…" : "Start charging"}
+                              </button>
+                            </>
+                          )
                         )}
                       </>
                     )}
@@ -141,7 +215,11 @@ function ReservationsSkeleton() {
 }
 
 export default function MyReservationsPage() {
-  const [promise] = useState(() => reservationsApi.list());
+  const [promise] = useState(() =>
+    Promise.all([reservationsApi.list(), chargingApi.list()]).then(
+      ([reservations, sessions]) => ({ reservations, sessions })
+    )
+  );
 
   return (
     <div className="p-8">

@@ -90,10 +90,16 @@ export const reservationsApi = {
     }),
   cancel: (id: string) => request<void>(`/reservations/${id}`, { method: "DELETE" }),
   startCharging: (reservationId: string) =>
-    request<void>("/charging/sessions/start", {
+    request<import("./types").ChargingSession>("/charging/sessions/start", {
       method: "POST",
       body: JSON.stringify({ reservationId }),
     }),
+};
+
+// Charging
+export const chargingApi = {
+  list: () => request<import("./types").ChargingSession[]>("/charging/sessions/my"),
+  stop: (id: string) => request<import("./types").ChargingSession>(`/charging/sessions/${id}/stop`, { method: "POST" }),
 };
 
 // Invoices
