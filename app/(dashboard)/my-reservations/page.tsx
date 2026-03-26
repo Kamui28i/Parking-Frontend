@@ -7,6 +7,7 @@ import TableSkeleton from "@/components/ui/TableSkeleton";
 import ScanPlateModal from "@/components/ScanPlateModal";
 import { reservationsApi, chargingApi } from "@/lib/api";
 import type { Reservation, ChargingSession } from "@/lib/types";
+import { useToast } from "@/components/ui/Toast";
 
 type Tab = "ALL" | "ACTIVE" | "PAST";
 
@@ -37,6 +38,7 @@ function ReservationsList({ promise }: { promise: Promise<PageData> }) {
   const [startingCharging, setStartingCharging] = useState<string | null>(null);
   const [stoppingCharging, setStoppingCharging] = useState<string | null>(null);
   const [scanningReservation, setScanningReservation] = useState<Reservation | null>(null);
+  const toast = useToast();
 
   const filtered = reservations.filter((r) => {
     if (tab === "ACTIVE") return r.status === "CONFIRMED" || r.status === "PENDING";
@@ -49,7 +51,10 @@ function ReservationsList({ promise }: { promise: Promise<PageData> }) {
     try {
       await reservationsApi.cancel(id);
       setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status: "CANCELLED" } : r)));
-    } catch {/* ignore */} finally {
+      toast("success", "Reservation cancelled.");
+    } catch {
+      toast("error", "Failed to cancel reservation.");
+    } finally {
       setCancelling(null);
     }
   };
@@ -59,7 +64,10 @@ function ReservationsList({ promise }: { promise: Promise<PageData> }) {
     try {
       const session = await reservationsApi.startCharging(reservationId);
       setActiveSessions((prev) => ({ ...prev, [reservationId]: session }));
-    } catch {/* ignore */} finally {
+      toast("success", "Charging session started.");
+    } catch {
+      toast("error", "Failed to start charging.");
+    } finally {
       setStartingCharging(null);
     }
   };
@@ -76,7 +84,10 @@ function ReservationsList({ promise }: { promise: Promise<PageData> }) {
         return next;
       });
       setCompletedSessions((prev) => new Set([...prev, reservationId]));
-    } catch {/* ignore */} finally {
+      toast("success", "Charging session stopped.");
+    } catch {
+      toast("error", "Failed to stop charging.");
+    } finally {
       setStoppingCharging(null);
     }
   };

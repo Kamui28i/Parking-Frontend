@@ -89,6 +89,11 @@ function MapContent({ promise }: { promise: Promise<Zone[]> }) {
   const [availableSpaceIds, setAvailableSpaceIds] = useState<Set<string> | null>(null);
   const [filterLoading, setFilterLoading] = useState(false);
 
+  const [addressQuery, setAddressQuery] = useState("");
+  const [searchCoords, setSearchCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [addressLoading, setAddressLoading] = useState(false);
+  const [addressError, setAddressError] = useState("");
+
   const [scheduleSpace, setScheduleSpace] = useState<{ space: Space; zone: Zone } | null>(null);
 
   const handleSearch = async () => {
@@ -118,6 +123,28 @@ function MapContent({ promise }: { promise: Promise<Zone[]> }) {
     }
   };
 
+  const handleAddressSearch = async () => {
+    if (!addressQuery.trim()) return;
+    setAddressLoading(true);
+    setAddressError("");
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressQuery)}&limit=1`,
+        { headers: { "Accept-Language": "en" } }
+      );
+      const data = await res.json();
+      if (data.length === 0) {
+        setAddressError("No results found.");
+      } else {
+        setSearchCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+      }
+    } catch {
+      setAddressError("Search failed. Try again.");
+    } finally {
+      setAddressLoading(false);
+    }
+  };
+
   const clearFilter = () => {
     setFilterStart("");
     setFilterEnd("");
@@ -135,6 +162,34 @@ function MapContent({ promise }: { promise: Promise<Zone[]> }) {
     <div className="flex h-screen">
       {/* ── Sidebar ───────────────────────────────────────────────────────── */}
       <div className="w-80 shrink-0 flex flex-col bg-white border-r border-[#E5E5EA]">
+
+        {/* Address search */}
+        <div className="px-4 pt-4 pb-3 border-b border-[#E5E5EA]">
+          <p className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-2">
+            Search Address
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={addressQuery}
+              onChange={(e) => { setAddressQuery(e.target.value); setAddressError(""); }}
+              onKeyDown={(e) => { if (e.key === "Enter") handleAddressSearch(); }}
+              placeholder="e.g. Dortmund, Germany"
+              className="flex-1 h-8 px-2 rounded-lg border border-[#D2D2D7] text-xs bg-[#FAFAFA] focus:outline-none focus:border-[#1D1D1F] placeholder:text-[#C7C7CC]"
+            />
+            <button
+              onClick={handleAddressSearch}
+              disabled={!addressQuery.trim() || addressLoading}
+              className="h-8 px-3 flex items-center gap-1 rounded-lg bg-[#1D1D1F] text-white text-xs font-medium hover:bg-[#3a3a3c] disabled:opacity-40 transition-colors shrink-0"
+            >
+              <Search size={12} />
+              {addressLoading ? "…" : "Go"}
+            </button>
+          </div>
+          {addressError && (
+            <p className="text-[11px] text-[#FF3B30] mt-1.5">{addressError}</p>
+          )}
+        </div>
 
         {/* Time filter */}
         <div className="px-4 pt-4 pb-3 border-b border-[#E5E5EA]">
@@ -277,6 +332,7 @@ function MapContent({ promise }: { promise: Promise<Zone[]> }) {
           zones={zones}
           selectedZoneId={selectedZoneId}
           onSelectZone={setSelectedZoneId}
+          searchCoords={searchCoords}
         />
         <div className="absolute bottom-5 left-5 z-[1000] flex items-center gap-4 bg-white rounded-xl px-4 py-2 shadow-sm border border-[#E5E5EA]">
           {[

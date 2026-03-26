@@ -7,6 +7,7 @@ import { ChevronLeft, Calendar } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Toggle from "@/components/ui/Toggle";
+import { useToast } from "@/components/ui/Toast";
 import { reservationsApi } from "@/lib/api";
 
 const PRICE_PER_HOUR = 2.40;
@@ -40,6 +41,7 @@ export default function ReservationPage(props: {
   const [licensePlate, setLicensePlate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const toast = useToast();
 
   const total = calcPrice(start, end, evCharging);
 
@@ -51,9 +53,12 @@ export default function ReservationPage(props: {
         spaceId, startTime: start, endTime: end, withCharging: evCharging,
         ...(licensePlate ? { licensePlate: licensePlate.toUpperCase().trim() } : {}),
       });
+      toast("success", "Reservation confirmed! Your spot has been booked.");
       router.push("/my-reservations");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Reservation failed");
+      const msg = err instanceof Error ? err.message : "Reservation failed";
+      setError(msg);
+      toast("error", msg);
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,5 @@
 import Sidebar from "@/components/layout/Sidebar";
+import { ToastProvider } from "@/components/ui/Toast";
 
 export default function DashboardLayout({
   children,
@@ -6,9 +7,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-[#F5F5F7]">
-      <Sidebar />
-      <main className="flex-1 overflow-auto">{children}</main>
-    </div>
+    <ToastProvider>
+      <div className="flex min-h-screen bg-[#F5F5F7]">
+        <Sidebar />
+        <main className="flex-1 overflow-auto">{children}</main>
+      </div>
+    </ToastProvider>
   );
 }

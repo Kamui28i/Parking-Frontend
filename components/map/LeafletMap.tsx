@@ -19,13 +19,15 @@ interface Props {
   zones: Zone[];
   selectedZoneId: string;
   onSelectZone: (id: string) => void;
+  searchCoords?: { lat: number; lng: number } | null;
 }
 
-export default function LeafletMap({ zones, selectedZoneId, onSelectZone }: Props) {
+export default function LeafletMap({ zones, selectedZoneId, onSelectZone, searchCoords }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const polygonsRef = useRef<Map<string, L.Polygon>>(new Map());
+  const searchMarkerRef = useRef<L.Marker | null>(null);
 
   // Init map once
   useEffect(() => {
@@ -100,6 +102,20 @@ export default function LeafletMap({ zones, selectedZoneId, onSelectZone }: Prop
       map.panTo([sel.latitude, sel.longitude], { animate: true, duration: 0.5 });
     }
   }, [zones, selectedZoneId, onSelectZone]);
+
+  // Pan to searched address
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !searchCoords) return;
+    if (searchMarkerRef.current) {
+      searchMarkerRef.current.remove();
+      searchMarkerRef.current = null;
+    }
+    const marker = L.marker([searchCoords.lat, searchCoords.lng], { icon: PinIcon }).addTo(map);
+    marker.bindPopup("Search result").openPopup();
+    searchMarkerRef.current = marker;
+    map.setView([searchCoords.lat, searchCoords.lng], 15, { animate: true });
+  }, [searchCoords]);
 
   return <div ref={containerRef} style={{ height: "100%", width: "100%" }} />;
 }

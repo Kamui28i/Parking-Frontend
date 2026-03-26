@@ -5,6 +5,7 @@ import { X, Zap, CheckCircle2 } from "lucide-react";
 import { reservationsApi } from "@/lib/api";
 import type { Reservation, Space, Zone } from "@/lib/types";
 import Toggle from "@/components/ui/Toggle";
+import { useToast } from "@/components/ui/Toast";
 
 interface Props {
   space: Space;
@@ -117,6 +118,7 @@ export default function SpaceScheduleModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     reservationsApi.forSpace(space.id)
@@ -172,9 +174,13 @@ export default function SpaceScheduleModal({
         ...(licensePlate ? { licensePlate: licensePlate.toUpperCase().trim() } : {}),
       });
       setSuccess(true);
+      toast("success", `${space.name} reserved — check My Reservations.`);
       onReserved();
+      setTimeout(onClose, 2500);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Reservation failed.");
+      const msg = e instanceof Error ? e.message : "Reservation failed.";
+      setError(msg);
+      toast("error", msg);
     } finally {
       setSubmitting(false);
     }
@@ -268,7 +274,7 @@ export default function SpaceScheduleModal({
               >
                 {slots.map((slot, i) => (
                   <button
-                    key={slot.start}
+                    key={i}
                     onClick={() => handleSlotClick(slot)}
                     disabled={slot.status === "past" || slot.status === "booked"}
                     className={`flex items-center w-full px-3 gap-3 text-left transition-colors ${
