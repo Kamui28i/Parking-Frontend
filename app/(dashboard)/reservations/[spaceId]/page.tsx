@@ -37,6 +37,7 @@ export default function ReservationPage(props: {
   const [start, setStart] = useState(defaultStart);
   const [end, setEnd] = useState(defaultEnd);
   const [evCharging, setEvCharging] = useState(false);
+  const [licensePlate, setLicensePlate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -46,7 +47,10 @@ export default function ReservationPage(props: {
     setError("");
     setLoading(true);
     try {
-      await reservationsApi.create({ spaceId, startTime: start, endTime: end, withCharging: evCharging });
+      await reservationsApi.create({
+        spaceId, startTime: start, endTime: end, withCharging: evCharging,
+        ...(licensePlate ? { licensePlate: licensePlate.toUpperCase().trim() } : {}),
+      });
       router.push("/my-reservations");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Reservation failed");
@@ -116,6 +120,20 @@ export default function ReservationPage(props: {
             <p className="text-xs text-[#86868B] mt-0.5">Charge your vehicle while parked</p>
           </div>
           <Toggle checked={evCharging} onChange={setEvCharging} />
+        </div>
+
+        {/* License plate */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm text-[#1D1D1F]">License Plate</label>
+          <input
+            type="text"
+            value={licensePlate}
+            onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
+            placeholder="e.g. AB12CDE"
+            maxLength={10}
+            className="w-full h-11 px-3 rounded-xl border border-[#D2D2D7] bg-white text-sm text-[#1D1D1F] font-mono tracking-widest uppercase placeholder:font-sans placeholder:tracking-normal focus:outline-none focus:border-[#1D1D1F]"
+          />
+          <p className="text-xs text-[#86868B]">Required to use plate scanning when you arrive</p>
         </div>
 
         {/* Price breakdown */}

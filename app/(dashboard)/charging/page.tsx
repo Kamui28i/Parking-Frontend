@@ -61,6 +61,7 @@ function ChargingSessionsList({ promise }: { promise: Promise<ChargingSession[]>
               <td className="px-4 py-3 font-medium text-[#1D1D1F]">
                 {s.spaceName ?? s.spaceId}
                 {s.zoneName && <span className="block text-xs font-normal text-[#86868B]">{s.zoneName}</span>}
+                {s.licensePlate && <span className="block text-xs font-mono text-[#AEAEB2]">{s.licensePlate}</span>}
               </td>
               <td className="px-4 py-3 text-[#86868B]">{formatDateTime(s.startedAt)}</td>
               <td className="px-4 py-3 text-[#1D1D1F]">
@@ -112,13 +113,27 @@ function ChargingSessionsSkeleton() {
 }
 
 export default function ChargingSessionsPage() {
-  const [promise] = useState(() => chargingApi.list());
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [promise, setPromise] = useState(() => chargingApi.list());
+
+  const handleRefresh = () => {
+    setPromise(chargingApi.list());
+    setRefreshKey((k) => k + 1);
+  };
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-semibold text-[#1D1D1F] mb-6">Charging Sessions</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold text-[#1D1D1F]">Charging Sessions</h1>
+        <button
+          onClick={handleRefresh}
+          className="text-sm text-[#86868B] hover:text-[#1D1D1F] transition-colors"
+        >
+          ↻ Refresh
+        </button>
+      </div>
       <Suspense fallback={<ChargingSessionsSkeleton />}>
-        <ChargingSessionsList promise={promise} />
+        <ChargingSessionsList key={refreshKey} promise={promise} />
       </Suspense>
     </div>
   );

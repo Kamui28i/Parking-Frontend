@@ -4,6 +4,7 @@ import { use, Suspense, useState } from "react";
 import { Zap } from "lucide-react";
 import Badge, { statusToBadge } from "@/components/ui/Badge";
 import TableSkeleton from "@/components/ui/TableSkeleton";
+import ScanPlateModal from "@/components/ScanPlateModal";
 import { reservationsApi, chargingApi } from "@/lib/api";
 import type { Reservation, ChargingSession } from "@/lib/types";
 
@@ -35,6 +36,7 @@ function ReservationsList({ promise }: { promise: Promise<PageData> }) {
   );
   const [startingCharging, setStartingCharging] = useState<string | null>(null);
   const [stoppingCharging, setStoppingCharging] = useState<string | null>(null);
+  const [scanningReservation, setScanningReservation] = useState<Reservation | null>(null);
 
   const filtered = reservations.filter((r) => {
     if (tab === "ACTIVE") return r.status === "CONFIRMED" || r.status === "PENDING";
@@ -81,6 +83,16 @@ function ReservationsList({ promise }: { promise: Promise<PageData> }) {
 
   return (
     <>
+      {scanningReservation && (
+        <ScanPlateModal
+          reservationId={scanningReservation.id}
+          onClose={() => setScanningReservation(null)}
+          onChargingStarted={(session) => {
+            setActiveSessions((prev) => ({ ...prev, [session.reservationId]: session }));
+            setScanningReservation(null);
+          }}
+        />
+      )}
       <div className="flex gap-1 mb-6">
         {tabs.map((t) => (
           <button
@@ -112,6 +124,7 @@ function ReservationsList({ promise }: { promise: Promise<PageData> }) {
                 <td className="px-4 py-3 font-medium text-[#1D1D1F]">
                   {r.spaceName ?? r.spaceId}
                   {r.zoneName && <span className="block text-xs font-normal text-[#86868B]">{r.zoneName}</span>}
+                  {r.licensePlate && <span className="block text-xs font-mono text-[#AEAEB2]">{r.licensePlate}</span>}
                 </td>
                 <td className="px-4 py-3 text-[#86868B]">{formatDateTime(r.startTime)} — {formatDateTime(r.endTime)}</td>
                 <td className="px-4 py-3 text-[#1D1D1F]">€{r.estimatedFee}</td>
@@ -157,6 +170,16 @@ function ReservationsList({ promise }: { promise: Promise<PageData> }) {
                           ) : (
                             <>
                               <span className="text-[#D2D2D7]">·</span>
+                              {r.licensePlate && (
+                                <button
+                                  onClick={() => setScanningReservation(r)}
+                                  className="flex items-center gap-1 text-xs text-[#3B82F6] hover:text-[#2563eb] transition-colors font-medium"
+                                >
+                                  <Zap size={11} />
+                                  Scan Plate
+                                </button>
+                              )}
+                              {r.licensePlate && <span className="text-[#D2D2D7]">·</span>}
                               <button
                                 disabled={startingCharging === r.id}
                                 onClick={() => handleStartCharging(r.id)}

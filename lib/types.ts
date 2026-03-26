@@ -45,7 +45,10 @@ export interface Reservation {
   estimatedFee: string;
   withCharging: boolean;
   status: ReservationStatus;
+  licensePlate?: string;
 }
+
+export type InvoiceType = "RESERVATION" | "CHARGING";
 
 export interface Invoice {
   id: string;
@@ -54,6 +57,7 @@ export interface Invoice {
   zoneName?: string;
   amount: string;
   status: InvoiceStatus;
+  invoiceType: InvoiceType;
   createdAt: string;
 }
 
@@ -66,6 +70,7 @@ export interface ChargingSession {
   status: ChargingStatus;
   startedAt: string;
   energyKwh: number | null;
+  licensePlate?: string;
 }
 
 export interface PricingRule {

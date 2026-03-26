@@ -113,6 +113,7 @@ export default function SpaceScheduleModal({
   const [start, setStart] = useState(initialStart ?? nowPlusHours(1));
   const [end, setEnd] = useState(initialEnd ?? nowPlusHours(2));
   const [evCharging, setEvCharging] = useState(false);
+  const [licensePlate, setLicensePlate] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -168,6 +169,7 @@ export default function SpaceScheduleModal({
         startTime: start,
         endTime: end,
         withCharging: evCharging,
+        ...(licensePlate ? { licensePlate: licensePlate.toUpperCase().trim() } : {}),
       });
       setSuccess(true);
       onReserved();
@@ -376,6 +378,19 @@ export default function SpaceScheduleModal({
                     <Toggle checked={evCharging} onChange={setEvCharging} />
                   </div>
                 )}
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[#1D1D1F]">License Plate</label>
+                  <input
+                    type="text"
+                    value={licensePlate}
+                    onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
+                    placeholder="e.g. AB12CDE"
+                    maxLength={10}
+                    className="w-full h-9 px-3 rounded-xl border border-[#D2D2D7] text-xs bg-[#FAFAFA] font-mono tracking-widest uppercase placeholder:font-sans placeholder:tracking-normal focus:outline-none focus:border-[#1D1D1F]"
+                  />
+                  <p className="text-[10px] text-[#86868B]">Required to use plate scanning when you arrive</p>
+                </div>
 
                 {error && <p className="text-xs text-[#FF3B30]">{error}</p>}
 

@@ -2,11 +2,12 @@
 
 import { use, Suspense, useState } from "react";
 import Badge, { statusToBadge } from "@/components/ui/Badge";
+import { Zap, ParkingSquare } from "lucide-react";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { invoicesApi } from "@/lib/api";
 import type { Invoice } from "@/lib/types";
 
-const HEADERS = ["Invoice", "Parking Space", "Amount", "Status", "Date"];
+const HEADERS = ["Invoice", "Parking Space", "Type", "Amount", "Status", "Date"];
 
 function InvoicesList({ promise }: { promise: Promise<Invoice[]> }) {
   const invoices = use(promise);
@@ -36,6 +37,19 @@ function InvoicesList({ promise }: { promise: Promise<Invoice[]> }) {
                 {inv.spaceName ?? inv.reservationId}
                 {inv.zoneName && <span className="block text-xs font-normal text-[#86868B]">{inv.zoneName}</span>}
               </td>
+              <td className="px-4 py-3">
+                {inv.invoiceType === "CHARGING" ? (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
+                    <Zap size={10} className="fill-blue-600" />
+                    Charging
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-[#F5F5F7] text-[#86868B]">
+                    <ParkingSquare size={10} />
+                    Parking
+                  </span>
+                )}
+              </td>
               <td className="px-4 py-3 text-[#1D1D1F]">€{inv.amount}</td>
               <td className="px-4 py-3">
                 <Badge label={inv.status} variant={statusToBadge(inv.status)} />
@@ -47,6 +61,7 @@ function InvoicesList({ promise }: { promise: Promise<Invoice[]> }) {
           ))}
           <tr className="bg-[#F5F5F7]">
             <td className="px-4 py-3 font-semibold text-[#1D1D1F]">Total Paid</td>
+            <td />
             <td />
             <td className="px-4 py-3 font-semibold text-[#1D1D1F]">€{total}</td>
             <td />
@@ -71,7 +86,7 @@ function InvoicesSkeleton() {
             ))}
           </tr>
         </thead>
-        <TableSkeleton rows={4} cols={5} />
+        <TableSkeleton rows={4} cols={6} />
       </table>
     </div>
   );

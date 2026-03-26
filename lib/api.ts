@@ -83,6 +83,7 @@ export const reservationsApi = {
     startTime: string;
     endTime: string;
     withCharging: boolean;
+    licensePlate?: string;
   }) =>
     request<import("./types").Reservation>("/reservations", {
       method: "POST",
@@ -94,6 +95,11 @@ export const reservationsApi = {
       method: "POST",
       body: JSON.stringify({ reservationId }),
     }),
+  scanPlate: (reservationId: string, imageBase64: string) =>
+    request<{ matched: boolean; detectedPlate: string; session?: import("./types").ChargingSession }>(
+      "/charging/sessions/scan-plate",
+      { method: "POST", body: JSON.stringify({ reservationId, imageBase64 }) }
+    ),
 };
 
 // Charging
